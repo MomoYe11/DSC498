@@ -5,19 +5,25 @@ library(cluster)
 library(RColorBrewer)
 library(labdsv)
 library(corrplot)
-install.packages("factoextra")
 library(factoextra)
 
-data<-read.csv("yeardata 2.csv")
+data<-read.csv("yeardata.csv", header=TRUE, sep=",")
 
-df<-scale(data)
+data2<-read.csv("yearlydata2.csv", header=TRUE, sep=",")
+
+# find best number of clusters
+row.names(data2) <- data[,1]
+head(data2)
+df <- scale(data2) 
 fviz_nbclust(df, kmeans, method = "wss") + geom_vline(xintercept = 4, linetype = 2)
 
-distance <- get_dist(data)
-fviz_dist(distance, gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+# distance matrix
+distance <- get_dist(data2)
+fviz_dist(distance, gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07",show_labels = TRUE))
 
+# K-means for 3 cluster
 set.seed(123)
-km_result <- kmeans(df, 4, nstart = 24)
+km_result <- kmeans(df, 4)
 print(km_result)
 dd <- cbind(data, cluster = km_result$cluster)
 head(dd)
@@ -30,12 +36,26 @@ fviz_cluster(km_result, data = df,
              ggtheme = theme_minimal()
 )
 
-d<-dist(as.matrix(data))
-hc<-hclust(d)
-plot(hc,labels=data$City)
-plot(data)
+# hierarchical analysis for 3 cluster
+result <- dist(df, method = "euclidean")
+result_hc <- hclust(d = result, method = "ward.D2")
+fviz_dend(result_hc, cex = 0.6)
+fviz_dend(result_hc, k = 4, 
+          cex = 0.5, 
+          k_colors = c("#2E9FDF", "#00AFBB", "#E7B800", "#FC4E07"),
+          color_labels_by_k = TRUE, 
+          rect = TRUE          
+)
 
-cor=cor(data)
-corrplot(cor)
-?corrp
+
+
+
+#d<-dist(as.matrix(data))
+#hc<-hclust(d)
+#plot(hc,labels=data$City)
+#plot(data)
+
+#cor=cor(data)
+#corrplot(cor)
+#?corrp
   
